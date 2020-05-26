@@ -43,16 +43,18 @@ class Config(object):
         },
         'handlers': {
             'console': {
-                'level': 'DEBUG',  # TODO
+                'level': 'DEBUG',
                 'class': 'logging.StreamHandler',
                 'formatter': 'verbose'
             },
             'file': {
-                'level': 'DEBUG',  # TODO
-                'class': 'logging.FileHandler',
+                'level': 'DEBUG',
+                'class': 'logging.handlers.RotatingFileHandler',
                 'formatter': 'verbose',
                 'filename': LOG_FILE,
-                'mode': 'a',
+                'maxBytes': 1024*1024*1024,
+                'encoding': "utf-8",
+                'backupCount': 10
             },
         },
         'loggers': {
