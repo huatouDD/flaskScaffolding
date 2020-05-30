@@ -13,14 +13,11 @@ import datetime
 class Config(object):
     """Base configuration."""
 
-    SECRET_KEY = os.environ.get('RICHWEBSYS_SECRET', 'secret-key')  # TODO: Change me
+    SECRET_KEY = os.urandom(24)
     APP_DIR = os.path.abspath(os.path.dirname(__file__))  # This directory
     PROJECT_ROOT = os.path.abspath(os.path.join(APP_DIR, os.pardir))
-    BCRYPT_LOG_ROUNDS = 13  # 决定encryption的复杂程度，默认值为12
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    BAIDU_MAP_URL = 'https://api.map.baidu.com/geocoder/v2'  # 百度地图URL
-    BAIDU_OUTPUT = '&output=json&ak=Bfy0cxLPhsblXnda2x36WRDPUuMGSfsp'  # 百度地图out_put
     # 指定日志的格式，按照每天一个日志文件的方式
     LOG_FILE = './logs/myFlask.log'
     LOGCONFIG = {
@@ -52,7 +49,7 @@ class Config(object):
                 'class': 'logging.handlers.RotatingFileHandler',
                 'formatter': 'verbose',
                 'filename': LOG_FILE,
-                'maxBytes': 1024*1024*1024,
+                'maxBytes': 1024 * 1024 * 1024,
                 'encoding': "utf-8",
                 'backupCount': 10
             },
@@ -65,6 +62,20 @@ class Config(object):
             },
         }
     }
+
+    #######################################
+    # ##############JWT配置############   #
+    # 用户验证输入字段
+    # JWT_AUTH_USER_CODE_KEY = 'user_code'
+    JWT_TOKEN_LOCATION = ['cookies']
+    JWT_COOKIE_CSRF_PROTECT = True  # 开启token CSRF保护
+    JWT_CSRF_IN_COOKIES = False  # 禁止将CSRF值设置在cookie中，用户登录时直接以JSON方式返回
+    JWT_ACCESS_COOKIE_PATH = '/'  # 默认允许前端向任务后端接口发送该cookie
+    JWT_REFRESH_COOKIE_PATH = '/'  # 默认允许前端向任务后端接口发送该cookie
+    JWT_ACCESS_CSRF_HEADER_NAME = 'x_access_csrf_token'  # access_token对应的CSRF值对应的键名
+    JWT_REFRESH_CSRF_HEADER_NAME = 'x_refresh_csrf_token'  # refresh_token请求头中的CSRF对应的键名
+    JWT_ACCESS_TOKEN_EXPIRES = datetime.timedelta(minutes=120)  # access过期时间
+    JWT_REFRESH_TOKEN_EXPIRES = datetime.timedelta(days=30)  # 过期时间
 
 
 class ProdConfig(Config):
