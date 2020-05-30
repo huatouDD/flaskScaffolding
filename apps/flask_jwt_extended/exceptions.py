@@ -70,3 +70,12 @@ class UserClaimsVerificationError(JWTExtendedException):
     indicating that the expected user claims are invalid
     """
     pass
+
+class UserLoginRequestError(JWTExtendedException):
+    """
+    Error raised when the claims_verification_callback function returns False,
+    indicating that the expected user claims are invalid
+    """
+    pass
+
+

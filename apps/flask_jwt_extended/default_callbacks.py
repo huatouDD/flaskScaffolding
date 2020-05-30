@@ -33,16 +33,20 @@ def default_jwt_headers_callback(default_headers):
     return None
 
 
-def default_user_identity_callback(userdata):
+def default_user_identity_callback(user_instance):
     """
     By default, we use the passed in object directly as the jwt identity.
     See this for additional info:
+
+    默认传入当前用户对象实例，当调用create_access_token函数时传入的用户身份鉴定属性identity的值
+
 
     :param userdata: data passed in as the ```identity``` argument to the
                      ```create_access_token``` and ```create_refresh_token```
                      functions
     """
-    return userdata
+    # 从用户对象中获取身份鉴定属性 user_code
+    return user_instance.user_code
 
 
 def default_expired_token_callback(expired_token):
@@ -95,8 +99,17 @@ def default_user_loader_error_callback(identity):
     function returns None, we return a general error message with a 401
     status code
     """
-    result = {config.error_msg_key: "Error loading the user {}".format(identity)}
+    result = {config.error_msg_key: "当前用户：{}加载失败".format(identity)}
     return jsonify(result), 401
+
+
+def default_login_request_error_callback(error_string):
+    """
+    用户登录请求出错时返回错误信息，默认返回401
+    :param error_string:
+    :return:
+    """
+    return jsonify({config.error_msg_key: error_string}), 401
 
 
 def default_claims_verification_callback(user_claims):

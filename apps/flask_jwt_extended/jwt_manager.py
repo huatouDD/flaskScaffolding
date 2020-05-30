@@ -6,6 +6,8 @@ from jwt import (
     InvalidIssuerError, DecodeError
 )
 
+from apps.flask_jwt_extended.flask_jwt_extend_logger import jwt_logger
+
 try:
     from flask import _app_ctx_stack as ctx_stack
 except ImportError:  # pragma: no cover
@@ -15,8 +17,8 @@ from apps.flask_jwt_extended.config import config
 from apps.flask_jwt_extended.exceptions import (
     JWTDecodeError, NoAuthorizationError, InvalidHeaderError, WrongTokenError,
     RevokedTokenError, FreshTokenRequired, CSRFError, UserLoadError,
-    UserClaimsVerificationError
-)
+    UserClaimsVerificationError,
+    UserLoginRequestError)
 from apps.flask_jwt_extended.default_callbacks import (
     default_expired_token_callback, default_user_claims_callback,
     default_user_identity_callback, default_invalid_token_callback,
@@ -24,7 +26,7 @@ from apps.flask_jwt_extended.default_callbacks import (
     default_revoked_token_callback, default_user_loader_error_callback,
     default_claims_verification_callback, default_verify_claims_failed_callback,
     default_decode_key_callback, default_encode_key_callback,
-    default_jwt_headers_callback)
+    default_jwt_headers_callback, default_login_request_error_callback)
 from apps.flask_jwt_extended.tokens import (
     encode_refresh_token, encode_access_token
 )
@@ -52,20 +54,21 @@ class JWTManager(object):
         # Register the default error handler callback methods. These can be
         # overridden with the appropriate loader decorators
         self._user_claims_callback = default_user_claims_callback
-        self._user_identity_callback = default_user_identity_callback
+        self._user_identity_callback = default_user_identity_callback  # 自定义
         self._expired_token_callback = default_expired_token_callback
         self._invalid_token_callback = default_invalid_token_callback
         self._unauthorized_callback = default_unauthorized_callback
         self._needs_fresh_token_callback = default_needs_fresh_token_callback
         self._revoked_token_callback = default_revoked_token_callback
         self._user_loader_callback = None
-        self._user_loader_error_callback = default_user_loader_error_callback
+        self._user_loader_error_callback = default_user_loader_error_callback  # 自定义
         self._token_in_blacklist_callback = None
         self._claims_verification_callback = default_claims_verification_callback
         self._verify_claims_failed_callback = default_verify_claims_failed_callback
         self._decode_key_callback = default_decode_key_callback
         self._encode_key_callback = default_encode_key_callback
         self._jwt_additional_header_callback = default_jwt_headers_callback
+        self._login_request_error_callback = default_login_request_error_callback  # 用户自定义错误处理回调
 
         # Register this extension with the flask app now (if it is provided)
         if app is not None:
@@ -78,7 +81,7 @@ class JWTManager(object):
         :param app: A flask application
         """
         # Save this so we can use it later in the extension
-        if not hasattr(app, 'extensions'):   # pragma: no cover
+        if not hasattr(app, 'extensions'):  # pragma: no cover
             app.extensions = {}
         app.extensions['flask-jwt-extended'] = self
 
@@ -90,6 +93,10 @@ class JWTManager(object):
         """
         Sets the error handler callbacks used by this extension
         """
+        @app.errorhandler(UserLoginRequestError)
+        def handle_login_error(e):
+            return self._login_request_error_callback(str(e))
+
         @app.errorhandler(NoAuthorizationError)
         def handle_auth_error(e):
             return self._unauthorized_callback(str(e))
@@ -359,6 +366,7 @@ class JWTManager(object):
         will be called.
         """
         self._user_loader_callback = callback
+        jwt_logger.info("调用了apps.auth.user_loader_handler回调函数")
         return callback
 
     def user_loader_error_loader(self, callback):
